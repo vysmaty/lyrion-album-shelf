@@ -11,6 +11,40 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 
 class DistributionTests(unittest.TestCase):
+    def test_repository_points_to_immutable_release_with_sha1(self):
+        path = ROOT / 'repo.xml'
+        self.assertTrue(path.is_file(), 'custom repository manifest is missing')
+        root = ET.parse(path).getroot()
+        self.assertEqual(root.tag, 'extensions')
+        self.assertTrue(root.findtext('details/title'))
+        plugins = root.findall('plugins/plugin')
+        self.assertEqual(len(plugins), 1)
+        plugin = plugins[0]
+        self.assertEqual(plugin.attrib, {'name': 'AlbumShelf', 'version': '0.1.0', 'minTarget': '8.5', 'maxTarget': '*'})
+        self.assertEqual(plugin.findtext('url'), 'https://github.com/vysmaty/lyrion-album-shelf/releases/download/v0.1.0/AlbumShelf-0.1.0.zip')
+        data = (ROOT / 'dist/AlbumShelf-0.1.0.zip').read_bytes()
+        self.assertEqual(plugin.findtext('sha'), hashlib.sha1(data).hexdigest())
+        self.assertEqual(hashlib.sha256(data).hexdigest(), 'fc4a62464337a39101718bf8d0baf71c904c1d34456d3230f9f580f18a27649b')
+        # PluginDownloader.extract strips the matching plugin/ prefix before extractTree.
+        with zipfile.ZipFile(ROOT / 'dist/AlbumShelf-0.1.0.zip') as archive:
+            names = archive.namelist()
+            prefix = next((p for p in ('Plugins/AlbumShelf/', 'AlbumShelf/') if any(n.startswith(p) for n in names)), '')
+            installed = {n[len(prefix):]: archive.read(n) for n in names if n.startswith(prefix)}
+            self.assertIn('install.xml', installed)
+            metadata = ET.fromstring(installed['install.xml'])
+            self.assertEqual(metadata.findtext('module'), 'Plugins::AlbumShelf::Plugin')
+            self.assertEqual(metadata.findtext('version'), plugin.get('version'))
+            self.assertIn('Plugin.pm', installed)
+
+    def test_packager_refuses_to_replace_existing_release_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / 'AlbumShelf-0.1.0.zip'
+            archive.write_bytes(b'existing release bytes')
+            result = subprocess.run([sys.executable, str(ROOT / 'tools/package.py'), '--output-dir', tmp], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Refusing to overwrite', result.stderr)
+            self.assertEqual(archive.read_bytes(), b'existing release bytes')
+
     def test_install_metadata_is_standalone(self):
         path = ROOT / 'plugin/AlbumShelf/install.xml'
         self.assertTrue(path.is_file(), 'plugin metadata is missing')

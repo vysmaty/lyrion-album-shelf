@@ -23,13 +23,15 @@ jobs:
       - name: Distribution tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Build archive without installation or publication
-        run: python3 tools/package.py
+        run: python3 tools/package.py --output-dir artifacts/build
       - name: Exercise code extracted from the archive
-        run: python3 tools/verify_package.py dist/AlbumShelf-0.1.0.zip
+        run: |
+          python3 tools/verify_package.py dist/AlbumShelf-0.1.0.zip
+          python3 tools/verify_package.py artifacts/build/AlbumShelf-0.1.0.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: AlbumShelf-0.1.0
+          name: AlbumShelf-0.1.0-test-build-not-release
           path: |
-            dist/AlbumShelf-0.1.0.zip
-            dist/AlbumShelf-0.1.0.zip.sha256
+            artifacts/build/AlbumShelf-0.1.0.zip
+            artifacts/build/AlbumShelf-0.1.0.zip.sha256
           if-no-files-found: error

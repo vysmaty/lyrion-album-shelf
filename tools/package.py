@@ -2,6 +2,7 @@
 """Build a byte-reproducible LMS plugin ZIP; never installs or uploads anything."""
 import argparse
 import hashlib
+import io
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import zipfile
@@ -28,14 +29,19 @@ def build(output_dir):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     archive = output_dir / f'AlbumShelf-{version}.zip'
-    with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for name, data in sorted(files.items()):
             info = zipfile.ZipInfo(name, date_time=(2026,1,1,0,0,0))
             info.create_system = 3
             info.external_attr = 0o100644 << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             z.writestr(info, data, compresslevel=9)
-    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    data = buffer.getvalue()
+    if archive.exists() and archive.read_bytes() != data:
+        raise ValueError(f'Refusing to overwrite existing release: {archive.name}; use a fresh output directory or a new version')
+    archive.write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
     archive.with_suffix('.zip.sha256').write_text(f'{digest}  {archive.name}\n', encoding='ascii')
     print(f'{archive.name}: {len(files)} files; SHA256 {digest}')
     return archive
