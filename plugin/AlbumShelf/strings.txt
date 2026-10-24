@@ -1,0 +1,7 @@
+PLUGIN_ALBUMSHELF
+	EN	Album Shelf
+	CS	Police alb
+
+PLUGIN_ALBUMSHELF_DESC
+	EN	A quiet TV shelf of TIDAL Local favourite albums. Plays on an existing LMS player, never in the television browser.
+	CS	Klidná televizní police oblíbených alb z TIDAL Local. Hraje na existujícím přehrávači LMS, nikdy v televizním prohlížeči.

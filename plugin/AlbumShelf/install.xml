@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension>
+  <id>albumshelf</id>
+  <name>PLUGIN_ALBUMSHELF</name>
+  <module>Plugins::AlbumShelf::Plugin</module>
+  <version>0.1.0</version>
+  <description>PLUGIN_ALBUMSHELF_DESC</description>
+  <creator>AlbumShelf contributors</creator>
+  <category>musicservices</category>
+  <defaultState>enabled</defaultState>
+  <type>2</type>
+  <targetApplication>
+    <id>Lyrion Music Server</id>
+    <minVersion>8.5</minVersion>
+    <maxVersion>*</maxVersion>
+  </targetApplication>
+</extension>

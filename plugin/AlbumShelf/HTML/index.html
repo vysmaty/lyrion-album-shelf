@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="cs">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="color-scheme" content="light"><title>AlbumShelf · Vaše hudba na očích</title>
+ <link rel="stylesheet" href="style.css">
+ <script defer src="core.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+ <header class="chrome"><a class="wordmark" href="./" aria-label="AlbumShelf domů"><span class="mark" aria-hidden="true">▥</span> AlbumShelf <span class="edition">VAŠE HUDBA NA OČÍCH</span></a>
+ <div class="tools"><label class="player-label"><span class="led"></span><span class="sr-only">Přehrávat na</span><select id="player"><option value="">Vyberte přehrávač</option></select></label><button id="now-toggle" type="button">Právě hraje <span aria-hidden="true">↗</span></button><button id="fullscreen" aria-label="Celá obrazovka" type="button">⛶</button></div></header>
+ <main>
+  <section id="wall" aria-label="Oblíbená alba"><div class="shelf-row" id="row-0"></div><div class="shelf-row" id="row-1"></div></section>
+  <section id="message" role="status"><span class="eyebrow">VÁŠ MALÝ HUDEBNÍ KOUT</span><h1>Hudba, ke které se vracíte.</h1><p id="message-text">Vyberte přehrávač. Vaše oblíbená alba se objeví na policích.</p><button id="retry" hidden type="button">Zkusit znovu</button></section>
+  <section id="now" hidden aria-label="Právě hraje"><div class="now-art" id="now-art"></div><div><p class="eyebrow">PRÁVĚ HRAJE</p><h1 id="now-title">Nic nehraje</h1><p id="now-artist"></p><p id="now-album"></p><button id="transport" type="button" disabled>Přehrát</button><button id="back" type="button">Zpět na police</button></div></section>
+ </main>
+ <footer class="chrome"><div id="caption"><p id="caption-artist" class="eyebrow">OBLÍBENÁ ALBA</p><h2 id="caption-title">Vyberte si něco na poslech.</h2></div><div class="hints"><span id="page-count"></span><span><kbd>↑ ↓ ← →</kbd> vybrat</span><span><kbd>OK</kbd> přehrát album</span></div></footer>
+ <div id="toast" role="status" aria-live="polite"></div><div id="demo-badge" hidden>UKÁZKA DESIGNU · BEZ PŘEHRÁVÁNÍ</div>
+</body></html>

@@ -1,0 +1,35 @@
+name: Test and package AlbumShelf
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Perl backend (explicit LMS/TIDAL boundary stubs)
+        run: prove -v tests/backend.t
+      - name: Frontend unit tests
+        run: node --test tests/frontend.test.cjs
+      - name: Distribution tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Build archive without installation or publication
+        run: python3 tools/package.py
+      - name: Exercise code extracted from the archive
+        run: python3 tools/verify_package.py dist/AlbumShelf-0.1.0.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlbumShelf-0.1.0
+          path: |
+            dist/AlbumShelf-0.1.0.zip
+            dist/AlbumShelf-0.1.0.zip.sha256
+          if-no-files-found: error

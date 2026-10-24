@@ -1,0 +1,20 @@
+▶ real browser: explicit player, safe grid, D-pad and single native album launch
+  ✔ empty favourites and unavailable TIDAL have truthful retry states (361.40045ms)
+  ✔ remembered explicit target restores without playback (254.090879ms)
+  ✔ safe artwork loads real image pixels in the browser (176.626102ms)
+  ✔ now-playing view never sends a transport command on open (342.333659ms)
+  ✔ five-minute idle rotation changes one cover and is suppressed during playback (3725.654875ms)
+  ✔ idle hides chrome and first D-pad press wakes without changing the album (2102.204984ms)
+✔ real browser: explicit player, safe grid, D-pad and single native album launch (10629.09108ms)
+✔ play requires explicit connected target, rejects repeats, and uses verified Tidal action (3.930868ms)
+✔ rotation requires idle, no playback, and five minutes without interaction (0.401033ms)
+✔ artwork accepts web and local URLs but rejects executable schemes (0.622574ms)
+✔ remote grid navigation clamps, wraps pages and wakes without moving (0.409921ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11334.754304
