@@ -8,7 +8,7 @@
       <title lang="EN">Album Shelf</title>
       <desc lang="EN">A quiet TV shelf of TIDAL Local favourite albums, controlling an existing LMS player.</desc>
       <category>musicservices</category>
-      <url>https://github.com/vysmaty/lyrion-album-shelf/releases/download/v0.1.0/AlbumShelf-0.1.0.zip</url>
+      <url>https://raw.githubusercontent.com/vysmaty/lyrion-album-shelf/v0.1.0/dist/AlbumShelf-0.1.0.zip</url>
       <link>https://github.com/vysmaty/lyrion-album-shelf</link>
       <sha>0ebaffb1f1bd13dfe497fc6b336f9881718c9ec0</sha>
       <creator>AlbumShelf contributors</creator>

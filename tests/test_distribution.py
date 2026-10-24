@@ -21,7 +21,7 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(len(plugins), 1)
         plugin = plugins[0]
         self.assertEqual(plugin.attrib, {'name': 'AlbumShelf', 'version': '0.1.0', 'minTarget': '8.5', 'maxTarget': '*'})
-        self.assertEqual(plugin.findtext('url'), 'https://github.com/vysmaty/lyrion-album-shelf/releases/download/v0.1.0/AlbumShelf-0.1.0.zip')
+        self.assertEqual(plugin.findtext('url'), 'https://raw.githubusercontent.com/vysmaty/lyrion-album-shelf/v0.1.0/dist/AlbumShelf-0.1.0.zip')
         data = (ROOT / 'dist/AlbumShelf-0.1.0.zip').read_bytes()
         self.assertEqual(plugin.findtext('sha'), hashlib.sha1(data).hexdigest())
         self.assertEqual(hashlib.sha256(data).hexdigest(), 'fc4a62464337a39101718bf8d0baf71c904c1d34456d3230f9f580f18a27649b')
