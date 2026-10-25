@@ -27,11 +27,11 @@ jobs:
       - name: Exercise code extracted from the archive
         run: |
           python3 tools/verify_package.py dist/AlbumShelf-0.1.0.zip
-          python3 tools/verify_package.py artifacts/build/AlbumShelf-0.1.0.zip
+          python3 tools/verify_package.py artifacts/build/AlbumShelf-0.2.3.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: AlbumShelf-0.1.0-test-build-not-release
+          name: AlbumShelf-0.2.3-test-build-not-release
           path: |
-            artifacts/build/AlbumShelf-0.1.0.zip
-            artifacts/build/AlbumShelf-0.1.0.zip.sha256
+            artifacts/build/AlbumShelf-0.2.3.zip
+            artifacts/build/AlbumShelf-0.2.3.zip.sha256
           if-no-files-found: error

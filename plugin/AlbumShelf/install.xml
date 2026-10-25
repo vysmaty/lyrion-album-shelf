@@ -3,7 +3,7 @@
   <id>albumshelf</id>
   <name>PLUGIN_ALBUMSHELF</name>
   <module>Plugins::AlbumShelf::Plugin</module>
-  <version>0.1.0</version>
+  <version>0.2.3</version>
   <description>PLUGIN_ALBUMSHELF_DESC</description>
   <creator>AlbumShelf contributors</creator>
   <category>musicservices</category>

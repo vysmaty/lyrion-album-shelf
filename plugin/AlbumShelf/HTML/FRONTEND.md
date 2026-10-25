@@ -1,44 +1,19 @@
-# Frontend handoff
+# Frontend
 
-This directory is the complete standalone browser frontend. No bundler, external runtime dependency, CDN, font request, audio element, browser player, Slimproto bridge, or credentials. HTML references `style.css`, `core.js`, `app.js` relatively. Backend contract read from root `INTERFACE.md`.
+Dependency-free HTML/CSS/JavaScript served by the LMS plugin. Assets are relative to `/plugins/AlbumShelf/`; native RPC and artwork requests infer an optional reverse-proxy prefix from the page URL. Fonts and interface materials are local. No audio element or browser player exists.
 
-## Backend packaging checklist
+Six square album sleeves appear on separate walnut holders, in three desktop columns or two mobile columns. Real provider artwork is used; failed images show an explicit unavailable-cover placeholder. Selection is a bottom-anchored tilt or a small realistic vinyl reveal, configured in Settings. There is no selection frame. The holder remains stationary. Reduced motion replaces movement with a stronger static shadow.
 
-- Serve this `index.html` at **`/plugins/AlbumShelf/`**, including the trailing slash (redirect the non-slash path). Serve the three adjacent assets at the same URL prefix with correct MIME types. Existing plugin HTML mapping must be confirmed in the isolated LMS test, not assumed from the fixture browser server.
-- Album request: relative `albums.json?player=<encoded selected ID>`.
-- Native discovery/status/control: same-origin POST `/jsonrpc.js`, `slim.request`; play uses the exact TIDAL Local action documented in `INTERFACE.md`: `["tidal_browse","playlist","load","type:album","id:123"]`. This replaces the selected player's queue only after explicit OK/click. Errors do not silently fall back to another player.
-- Add `node_modules/` and `artifacts/` to the repository's `.gitignore` before staging. This frontend agent owns neither `.gitignore` nor backend files. Screenshots are test output, not shipped assets. There was no git repository at frontend verification time.
-- This handoff file can be omitted from the runtime ZIP.
+Every sleeve has a fine paperboard rim and a separately offset cardboard backing, independent of selection. A resting1.3° lean and four directional contact/cast/diffuse shadows separate it from the wall. Walnut holders use a frontal view with a1.1cqw symmetric top face, no one-sided end plane or skew, and a thin front face (4.2% of gallery cover height;3.6% in Now Playing), with their own wall shadow. Holder geometry stays fixed during selection. Desktop typography resolves to116/42/32px and main transport124px at1672px width, with responsive and long-title overrides. The authored rail preserves the native accessible range input and keyboard events.
 
-## Interaction
+Two original1254×1254 transparent edge-wear textures and a separate surface-rub texture composite over the provider image; they never replace it. A normalized album-title hash chooses one of two edge patterns and four rotations, stable between wall and Now Playing. `albumshelf.wear` controls opacity from0 to100(default55), including clean artwork at0. These layers have no pointer events, are hidden from accessibility APIs and are absent from missing-art placeholders. Palette extraction still reads the provider image alone. All12 material rasters carry embedded XMP provenance; original PNGs and exact prompts remain in development-only `.impeccable/assets/patina-v3/`.
 
-Czech UI; warm medium taupe grain, two thin oak ledges, eight large covers. Fewer than eight favourites leave real empty space; missing images show a neutral music glyph, never invented album art. More albums are paged in groups of eight by D-pad navigation.
+Roboto is bundled under Apache 2.0. Light is the default wall; dark and artwork-derived palettes are optional. Artwork sampling combines the six visible covers, or the current cover in Now Playing. Focus alone never recalculates the palette. Native LMS image proxy requests keep artwork same-origin for HTTPS and canvas sampling.
 
-First launch requires explicit connected-player selection. Previously explicitly chosen ID is saved in `localStorage['albumshelf.player']`; `?player=<encoded ID>` can select an existing connected player. Invalid/disconnected IDs are not replaced with the first player. Initial focus is on the chooser; after changing player it moves to the first album. Native select uses normal browser select/OK semantics. From the top album row, Up reaches “Právě hraje”; Left/Right navigates header buttons; Down returns to the album. Escape/Backspace closes now-playing view. Tab/mouse also work. Actual TV remote select behavior still needs on-device verification.
+Player choice is explicit and stored locally. OK/click replaces only that player's queue with the selected album. Up from the first row reaches the now-playing icon; arrows navigate albums/header controls. Escape/Backspace returns from Now Playing. Settings preserve native input/select keys and close on Escape. All icons have accessible names. No setting, focus change or page opening starts playback.
 
-Chrome and focus fade after 18 seconds of inactivity. First key only wakes the shelf, without playback/navigation. One off-screen favourite can replace one non-selected cover after five minutes idle; no rotation while interacting, loading/control busy, or server reports playback/unknown status. Every ten seconds the chosen player's status is refreshed. Now-playing is an explicit toggle and pause/resume is an explicit separate control; opening either page never starts playback. No automatic audio-device creation or queue writes.
+Controls retreat after 18 idle seconds. The first key only wakes them. After five idle minutes with known stopped playback, one non-selected album may be replaced by an off-screen favourite. Status refreshes every ten seconds. Native pause/resume, previous/next and seeking require explicit actions and a connected player with a queue.
 
-`?demo=1` is a separately labelled, offline visual preview with eight original CSS cover studies, **not claimed user content**. It disables player choice and playback, and does not make LMS requests.
+`albumshelf.player`, `.theme`, `.motion` and `.wear` are browser-local preferences. The public URL is stored using native `albumshelf publicurl` commands in LMS's `plugin.albumshelf` preferences and updates Apps links. See the root INTERFACE.md for the wire contract.
 
-## Tests / evidence
-
-`package.json` contains only the Playwright development dependency and a frontend test script. Production assets require no npm install.
-
-Portable setup: `npm install --ignore-scripts --no-package-lock` then `npx playwright install chromium`, then `npm run test:frontend`. Alternatively set `CHROMIUM_PATH` to an already available Chromium executable.
-
-Exact command used successfully in this environment:
-
-```
-NODE_PATH=/opt/data/home/.npm/_npx/420ff84f11983ee5/node_modules \
-CHROMIUM_PATH=/opt/hermes/tools/chromium-1208/chrome-linux64/chrome \
-node --test tests/frontend*.cjs
-```
-
-The initial Playwright browser download timed out; tests instead used the real preinstalled Chromium. Test-first core cycles and browser regression red/green runs were exercised. Browser tests use an explicitly isolated HTTP fixture with synthetic API responses, not live LMS/TIDAL. They verify real HTML/JS rendering and real artwork image pixels, eight-cover grid, explicit target and preservation, exact native play command with duplicate prevention, remote focus, safe remote text/art, empty/provider errors, manual pause/resume, idle wake behavior and virtual-clock five-minute rotation inhibition during playback.
-
-Screenshots generated at 1920×1080:
-
-- `artifacts/frontend-1920x1080.png` — active labelled demo.
-- `artifacts/frontend-idle-1920x1080.png` — uncluttered idle labelled demo.
-
-Not verified here: real TIDAL favourites or playback, installed LMS static MIME/path mapping, authenticated server transport, actual TV remote/fullscreen/brightness. Do not claim these as exercised or install/restart a live server without separate approval.
+`?demo=1` is a labeled offline preview with six illustrative CSS covers. It makes no LMS requests and disables playback/server-setting writes. Test and screenshot fixtures are development-only. Browser tests exercise real rendering and safe API boundaries; live LMS installation, reverse-proxy deployment and physical TV controls need target-device verification.

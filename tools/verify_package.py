@@ -41,12 +41,18 @@ def verify(archive):
         metadata = ET.parse(plugin / 'install.xml').getroot()
         if metadata.findtext('module') != 'Plugins::AlbumShelf::Plugin':
             raise ValueError('Incorrect plugin module')
-        env = dict(os.environ, ALBUMSHELF_PLUGIN=str(plugin / 'Plugin.pm'))
-        subprocess.run(['prove','-v',str(ROOT/'tests/backend.t')],check=True,env=env)
-        # Relocate only the tests so their relative imports resolve to the packaged frontend.
+        # Keep exercising the immutable old archive with its original contract;
+        # every new archive uses the current regression suite.
+        source_tests = ROOT / 'tests'
+        if metadata.findtext('version') == '0.1.0':
+            source_tests = source_tests / 'compat/v0.1.0'
+        env = dict(os.environ, ALBUMSHELF_PLUGIN=(plugin / 'Plugin.pm').as_posix())
         tests = base / 'tests'
         tests.mkdir()
-        shutil.copy2(ROOT/'tests/frontend.test.cjs',tests/'frontend.test.cjs')
+        shutil.copytree(ROOT/'tests/fixtures',tests/'fixtures')
+        shutil.copy2(source_tests/'backend.t',tests/'backend.t')
+        shutil.copy2(source_tests/'frontend.test.cjs',tests/'frontend.test.cjs')
+        subprocess.run([os.environ.get('PERL','perl'),(tests/'backend.t').as_posix()],check=True,env=env)
         subprocess.run(['node','--test',str(tests/'frontend.test.cjs')],check=True)
         for script in plugin.glob('HTML/*.js'):
             subprocess.run(['node','--check',str(script)],check=True)

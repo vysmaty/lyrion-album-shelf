@@ -19,7 +19,7 @@ def build(output_dir):
     for path in plugin.rglob('*'):
         if path.is_symlink():
             raise ValueError(f'Symlink not permitted: {path.name}')
-        if path.is_file() and not any(part.startswith('.') or part == '__pycache__' for part in path.relative_to(plugin).parts):
+        if path.is_file() and not path.name.endswith('.webp.json') and not any(part.startswith('.') or part == '__pycache__' for part in path.relative_to(plugin).parts):
             files['AlbumShelf/' + path.relative_to(plugin).as_posix()] = path.read_bytes()
     for name in ('README.md', 'LICENSE', 'INTERFACE.md'):
         files['AlbumShelf/' + name] = (ROOT / name).read_bytes()

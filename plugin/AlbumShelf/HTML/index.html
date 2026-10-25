@@ -2,18 +2,37 @@
 <html lang="cs">
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="color-scheme" content="light"><title>AlbumShelf · Vaše hudba na očích</title>
+ <meta name="color-scheme" content="light dark"><title>Hudba</title>
  <link rel="stylesheet" href="style.css">
  <script defer src="core.js"></script><script defer src="app.js"></script>
 </head>
-<body>
- <header class="chrome"><a class="wordmark" href="./" aria-label="AlbumShelf domů"><span class="mark" aria-hidden="true">▥</span> AlbumShelf <span class="edition">VAŠE HUDBA NA OČÍCH</span></a>
- <div class="tools"><label class="player-label"><span class="led"></span><span class="sr-only">Přehrávat na</span><select id="player"><option value="">Vyberte přehrávač</option></select></label><button id="now-toggle" type="button">Právě hraje <span aria-hidden="true">↗</span></button><button id="fullscreen" aria-label="Celá obrazovka" type="button">⛶</button></div></header>
- <main>
-  <section id="wall" aria-label="Oblíbená alba"><div class="shelf-row" id="row-0"></div><div class="shelf-row" id="row-1"></div></section>
-  <section id="message" role="status"><span class="eyebrow">VÁŠ MALÝ HUDEBNÍ KOUT</span><h1>Hudba, ke které se vracíte.</h1><p id="message-text">Vyberte přehrávač. Vaše oblíbená alba se objeví na policích.</p><button id="retry" hidden type="button">Zkusit znovu</button></section>
-  <section id="now" hidden aria-label="Právě hraje"><div class="now-art" id="now-art"></div><div><p class="eyebrow">PRÁVĚ HRAJE</p><h1 id="now-title">Nic nehraje</h1><p id="now-artist"></p><p id="now-album"></p><button id="transport" type="button" disabled>Přehrát</button><button id="back" type="button">Zpět na police</button></div></section>
+<body data-motion="tilt" data-theme="light">
+ <header class="chrome"><div class="tools">
+  <label class="player-label"><span class="led" id="connection-dot" aria-hidden="true"></span><span class="sr-only">Přehrávat na</span><select id="player"><option value="">Vyberte přehrávač</option></select></label>
+  <button id="now-toggle" class="icon-button" type="button" aria-label="Právě hraje" title="Právě hraje"></button>
+  <button id="back" class="icon-button" type="button" aria-label="Zpět na police" title="Zpět na police" hidden></button>
+  <button id="settings-toggle" class="icon-button" type="button" aria-label="Nastavení" title="Nastavení" aria-expanded="false" aria-controls="settings"></button>
+  <button id="fullscreen" class="icon-button" type="button" aria-label="Celá obrazovka" title="Celá obrazovka"></button>
+ </div></header>
+ <main id="content">
+  <section id="wall" aria-label="Oblíbená alba" hidden><div class="shelf-row" id="row-0"></div><div class="shelf-row" id="row-1"></div></section>
+  <section id="message" role="status"><h1>Hudba na vaší stěně.</h1><p id="message-text">Vyberte přehrávač. Vaše oblíbená alba se objeví na policích.</p><button id="retry" hidden type="button">Zkusit znovu</button></section>
+  <section id="now" hidden aria-label="Právě hraje">
+   <div class="now-art-slot"><div class="now-art" id="now-art"></div><span class="holder wood-3" aria-hidden="true"></span></div>
+   <div class="now-info"><h1 id="now-title">Nic nehraje</h1><p id="now-artist"></p><p id="now-album"></p>
+    <div id="timeline" hidden><input id="seek" type="range" min="0" max="1" step="1" value="0" disabled aria-label="Pozice ve skladbě"><div class="time-labels"><span id="time-elapsed">0:00</span><span id="time-duration">0:00</span></div></div>
+    <div class="transport-controls"><button id="previous" class="icon-button" type="button" disabled aria-label="Předchozí skladba"></button><button id="transport" class="icon-button" type="button" disabled aria-label="Pokračovat"></button><button id="next" class="icon-button" type="button" disabled aria-label="Další skladba"></button></div>
+   </div>
+  </section>
  </main>
- <footer class="chrome"><div id="caption"><p id="caption-artist" class="eyebrow">OBLÍBENÁ ALBA</p><h2 id="caption-title">Vyberte si něco na poslech.</h2></div><div class="hints"><span id="page-count"></span><span><kbd>↑ ↓ ← →</kbd> vybrat</span><span><kbd>OK</kbd> přehrát album</span></div></footer>
- <div id="toast" role="status" aria-live="polite"></div><div id="demo-badge" hidden>UKÁZKA DESIGNU · BEZ PŘEHRÁVÁNÍ</div>
-</body></html>
+ <footer id="footer" class="chrome"><div id="caption"><h2 id="caption-title"></h2><p id="caption-artist"></p></div><nav id="pagination" aria-label="Stránky alb" hidden><button id="page-previous" class="icon-button" type="button" aria-label="Předchozí stránka"></button><span id="page-count"></span><button id="page-next" class="icon-button" type="button" aria-label="Další stránka"></button></nav></footer>
+ <section id="settings" aria-label="Nastavení" hidden>
+  <div class="settings-heading"><h2>Nastavení</h2><button id="settings-close" class="icon-button" type="button" aria-label="Zavřít nastavení"></button></div>
+  <label>Pozadí<select id="theme"><option value="light">Světlá stěna</option><option value="dark">Tmavá stěna</option><option value="artwork">Podle obalů alb</option></select></label>
+  <label>Animace výběru<select id="motion"><option value="tilt">Mírné vyklopení obalu</option><option value="vinyl">Povysunutí vinylu</option></select></label>
+  <label for="wear"><span>Opotřebení obalů <output id="wear-value" for="wear">55 %</output></span><input id="wear" type="range" min="0" max="100" step="5" value="55"></label>
+  <form id="public-url-form"><label>Veřejná adresa<input id="public-url" type="url" placeholder="https://hudba.example.cz" autocomplete="off" spellcheck="false" aria-describedby="public-url-help url-status"></label><p id="public-url-help">Doména reverzní proxy nebo úplná adresa AlbumShelf. Prázdná hodnota použije adresu Lyrionu.</p><button id="save-url" type="submit">Uložit adresu</button><p id="url-status" role="status"></p><a id="public-link" hidden target="_blank" rel="noopener">Otevřít veřejnou adresu</a></form>
+ </section>
+ <div id="toast" role="status" aria-live="polite"></div><div id="demo-badge" hidden>NÁHLED · BEZ PŘEHRÁVÁNÍ</div>
+</body>
+</html>
