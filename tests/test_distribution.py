@@ -20,13 +20,14 @@ class DistributionTests(unittest.TestCase):
         plugins = root.findall('plugins/plugin')
         self.assertEqual(len(plugins), 1)
         plugin = plugins[0]
-        self.assertEqual(plugin.attrib, {'name': 'AlbumShelf', 'version': '0.1.0', 'minTarget': '8.5', 'maxTarget': '*'})
-        self.assertEqual(plugin.findtext('url'), 'https://raw.githubusercontent.com/vysmaty/lyrion-album-shelf/v0.1.0/dist/AlbumShelf-0.1.0.zip')
-        data = (ROOT / 'dist/AlbumShelf-0.1.0.zip').read_bytes()
+        self.assertEqual(plugin.attrib, {'name': 'AlbumShelf', 'version': '0.2.3', 'minTarget': '8.5', 'maxTarget': '*'})
+        self.assertEqual(plugin.findtext('url'), 'https://raw.githubusercontent.com/vysmaty/lyrion-album-shelf/v0.2.3/dist/AlbumShelf-0.2.3.zip')
+        data = (ROOT / 'dist/AlbumShelf-0.2.3.zip').read_bytes()
         self.assertEqual(plugin.findtext('sha'), hashlib.sha1(data).hexdigest())
-        self.assertEqual(hashlib.sha256(data).hexdigest(), 'fc4a62464337a39101718bf8d0baf71c904c1d34456d3230f9f580f18a27649b')
+        legacy = (ROOT / 'dist/AlbumShelf-0.1.0.zip').read_bytes()
+        self.assertEqual(hashlib.sha256(legacy).hexdigest(), 'fc4a62464337a39101718bf8d0baf71c904c1d34456d3230f9f580f18a27649b')
         # PluginDownloader.extract strips the matching plugin/ prefix before extractTree.
-        with zipfile.ZipFile(ROOT / 'dist/AlbumShelf-0.1.0.zip') as archive:
+        with zipfile.ZipFile(ROOT / 'dist/AlbumShelf-0.2.3.zip') as archive:
             names = archive.namelist()
             prefix = next((p for p in ('Plugins/AlbumShelf/', 'AlbumShelf/') if any(n.startswith(p) for n in names)), '')
             installed = {n[len(prefix):]: archive.read(n) for n in names if n.startswith(prefix)}
@@ -38,7 +39,7 @@ class DistributionTests(unittest.TestCase):
 
     def test_packager_refuses_to_replace_existing_release_bytes(self):
         with tempfile.TemporaryDirectory() as tmp:
-            archive = Path(tmp) / 'AlbumShelf-0.1.0.zip'
+            archive = Path(tmp) / 'AlbumShelf-0.2.3.zip'
             archive.write_bytes(b'existing release bytes')
             result = subprocess.run([sys.executable, str(ROOT / 'tools/package.py'), '--output-dir', tmp], capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
@@ -50,7 +51,7 @@ class DistributionTests(unittest.TestCase):
         self.assertTrue(path.is_file(), 'plugin metadata is missing')
         root = ET.parse(path).getroot()
         self.assertEqual(root.findtext('module'), 'Plugins::AlbumShelf::Plugin')
-        self.assertEqual(root.findtext('version'), '0.1.0')
+        self.assertEqual(root.findtext('version'), '0.2.3')
         self.assertEqual(root.findtext('name'), 'PLUGIN_ALBUMSHELF')
         self.assertEqual(root.findtext('targetApplication/minVersion'), '8.5')
         self.assertIsNone(root.find('optionsURL'))
@@ -62,7 +63,7 @@ class DistributionTests(unittest.TestCase):
             out = Path(tmp)
             result = subprocess.run([sys.executable, str(tool), '--output-dir', str(out)], cwd=ROOT, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            archive = out / 'AlbumShelf-0.1.0.zip'
+            archive = out / 'AlbumShelf-0.2.3.zip'
             self.assertTrue(archive.is_file())
             before = archive.read_bytes()
             with zipfile.ZipFile(archive) as z:
@@ -72,13 +73,20 @@ class DistributionTests(unittest.TestCase):
                 self.assertTrue(all(n.startswith('AlbumShelf/') for n in names))
                 for required in ['Plugin.pm','install.xml','strings.txt','README.md','LICENSE','INTERFACE.md']:
                     self.assertIn('AlbumShelf/' + required, names)
+                for asset in ['Roboto-Regular.ttf','FONT-APACHE-LICENSE.txt','wall-texture.webp','vinyl-disc.webp','wear-edge-1.webp','wear-edge-2.webp','wear-face.webp']+[f'wood-{i}.webp' for i in range(1,7)]:
+                    self.assertIn('AlbumShelf/HTML/'+asset, names)
+                materials = [n for n in names if n.endswith('.webp')]
+                self.assertEqual(len(materials), 12)
+                for material in materials:
+                    self.assertIn(b'XMP ', z.read(material), 'shipping materials retain provenance')
+                self.assertFalse(any(n.endswith('.webp.json') or '/reference/' in n for n in names))
                 self.assertFalse(any('/tests/' in n or '/.git/' in n or n.endswith('.pyc') for n in names))
                 self.assertEqual(z.read('AlbumShelf/Plugin.pm'), (ROOT/'plugin/AlbumShelf/Plugin.pm').read_bytes())
             again = subprocess.run([sys.executable,str(tool),'--output-dir',str(out)],cwd=ROOT,capture_output=True,text=True)
             self.assertEqual(again.returncode,0,again.stderr)
             self.assertEqual(before,archive.read_bytes(),'ZIP must be byte-reproducible')
             expected = hashlib.sha256(before).hexdigest()
-            self.assertEqual((out/'AlbumShelf-0.1.0.zip.sha256').read_text().strip(),expected+'  AlbumShelf-0.1.0.zip')
+            self.assertEqual((out/'AlbumShelf-0.2.3.zip.sha256').read_text().strip(),expected+'  AlbumShelf-0.2.3.zip')
 
     def test_packaged_code_is_exercised_and_unsafe_zip_is_rejected(self):
         tool = ROOT / 'tools/verify_package.py'
@@ -86,7 +94,7 @@ class DistributionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
             subprocess.run([sys.executable,str(ROOT/'tools/package.py'),'--output-dir',str(out)],check=True,capture_output=True)
-            run = subprocess.run([sys.executable,str(tool),str(out/'AlbumShelf-0.1.0.zip')],cwd=ROOT,text=True,capture_output=True)
+            run = subprocess.run([sys.executable,str(tool),str(out/'AlbumShelf-0.2.3.zip')],cwd=ROOT,text=True,capture_output=True)
             self.assertEqual(run.returncode,0,run.stdout+run.stderr)
             self.assertIn('Packaged backend and frontend tests: PASS',run.stdout)
             bad = out/'unsafe.zip'

@@ -1,74 +1,56 @@
-# AlbumShelf 0.1.0
+# AlbumShelf 0.2.3
 
-A standalone Lyrion Music Server plugin: favourite TIDAL albums on a quiet television shelf, with playback sent to an **existing selected LMS player**. It is not a LyrionJS subpage, audio renderer, Slimproto client, or Home Assistant automation.
+A standalone Lyrion Music Server plugin: favourite TIDAL albums on a quiet wall, with playback on an **existing selected LMS player**. The browser is a display and remote control.
 
-## Runtime requirements
+## What's new
 
-- LMS 8.5+ (declared compatibility floor; isolated target-server testing is still required).
-- TIDAL Local (`michaelherger/lms-plugin-tidal`) installed and configured in LMS.
-- An existing connected player and its normal TIDAL Local account selection.
-- A modern TV/browser with JavaScript, Fetch, localStorage and D-pad key events.
-
-No TIDAL tokens, login credentials or personal server addresses are stored by this repository. AlbumShelf calls the existing TIDAL Local favourite-album menu for the selected player; that plugin owns authentication, service requests and account choice. If no account is assigned, TIDAL Local itself may assign its normal default account. AlbumShelf does not create accounts or accept credentials.
+- Six large square sleeves with physical paperboard edges and layered contact/cast shadows, individual thin walnut holders with resolved grain and a fine plaster wall. Locally bundled Roboto; mobile uses two columns.
+- Frontal walnut holders with level edges and a narrow, symmetric top face, a slight sleeve resting lean and deeper directional wall shadows. Three original transparent wear textures add irregular scuffed edges and faint surface rubbing over the real artwork. Settings → **Opotřebení obalů** adjusts their intensity from 0 to 100% (default 55%), remembered per browser.
+- Two selection animations in Settings: a subtle sleeve tilt or a narrow reveal of a photorealistic vinyl record. Selection uses movement and shadows, without a frame. Reduced-motion preferences suppress movement.
+- Light, dark and artwork-derived backgrounds. The artwork palette combines all visible albums and stays stable when selection moves; Now Playing uses its current cover.
+- Now Playing resolves native LMS cover IDs as well as artwork URLs, with a current-player fallback. Remote artwork travels through LMS's own image proxy, keeping requests on the page's origin, including HTTPS.
+- A configurable public reverse-proxy URL for the standalone Apps link. Now Playing matches the approved large type and transport hierarchy, with a thin authored timeline that retains native keyboard seeking. Minimal icon controls and compact pagination.
 
 ## Open and use
 
-After a separately authorized installation, open **My Apps → Album Shelf** and follow the standalone web link, or open `/plugins/AlbumShelf/` on the same LMS origin. Select the existing audio player before loading its collection. The television is display/control only; playback remains on that player.
+Requires LMS 8.5+, configured [TIDAL Local](https://github.com/michaelherger/lms-plugin-tidal), an existing connected player and a modern browser. After installation, open **My Apps → Album Shelf**, follow its web link, or open `/plugins/AlbumShelf/` on LMS. Select the intended player; AlbumShelf never creates a player.
 
-Arrows select an album; OK/Enter explicitly loads that album into the selected player's queue (replacing the current queue). Focus and ambient rotation never start playback. Controls and labels retreat while idle. Interacting freezes slow cover rotation. The currently-playing view uses native LMS status rather than an invented television player.
+Arrows select an album. OK/Enter or a click explicitly loads it into that player's queue, replacing the current queue. Focus, opening Now Playing, changing settings and ambient rotation never start playback. After 18 seconds the controls retreat; the first key wakes them without an action. After five idle minutes, while playback is stopped, one non-selected cover can rotate into view.
 
-The complete wire contract is in [INTERFACE.md](INTERFACE.md). Album listing is read-only. Playback uses native LMS JSON-RPC: `tidal_browse playlist load type:album id:ID`, verified in upstream `_renderAlbum` and `_makeAction`. This command shape is source-verified, **not an exercised real TIDAL playback claim**.
+The gear opens Settings. Background and animation choices are remembered per browser. **Veřejná adresa** is stored on LMS: enter a proxy origin such as `https://hudba.example.cz`, or the complete URL `https://hudba.example.cz/lms/plugins/AlbumShelf/`. An empty value restores LMS's default address. This changes the Apps link; configure DNS, TLS and the reverse proxy separately. AlbumShelf infers `/lms/` from the page URL for its RPC and artwork requests. Proxy LMS's native `/jsonrpc.js`, `/imageproxy/` and `/music/` routes as well as `/plugins/AlbumShelf/`.
 
-## Build and test (no installation)
+## Build and test
 
-Only Perl core modules, Python 3 standard library and Node 18+ are needed for local tests and packaging:
+The runtime has no frontend dependencies. Local checks use Perl core modules, Python 3, Node 18+; browser tests additionally use Playwright and Chromium.
 
 ```sh
 prove -v tests/backend.t
 node --test tests/frontend.test.cjs
+npm install
+npx playwright install chromium
+npm run test:frontend
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 tools/package.py --output-dir artifacts/build
+python3 tools/verify_package.py artifacts/build/AlbumShelf-0.2.3.zip
 python3 tools/verify_package.py dist/AlbumShelf-0.1.0.zip
-python3 tools/verify_package.py artifacts/build/AlbumShelf-0.1.0.zip
 ```
 
-Local test-build output: `artifacts/build/AlbumShelf-0.1.0.zip` and its SHA256 file. The immutable published ZIP remains in `dist/` and on release `v0.1.0`; do not replace it with a rebuild. Current documentation changes mean a new test build can differ from that release without changing runtime code. The packager refuses to overwrite different existing archive bytes. Use a fresh output directory for test builds and a new version for any future release.
+On Windows with Git's Perl, set `PERL` to its full executable path; `CHROMIUM_PATH` optionally selects an installed browser. The ZIP has one `AlbumShelf/` root with `Plugin.pm`, `install.xml` and `HTML/`. Builds are byte-reproducible. The packager refuses to overwrite different bytes; use a fresh output directory after source changes.
 
-The ZIP has **one `AlbumShelf/` root**, directly containing `Plugin.pm`, `install.xml`, `strings.txt` and `HTML/`. It is not a source-repository ZIP. Lyrion's actual `PluginDownloader.extract` strips a matching `AlbumShelf/` (or `Plugins/AlbumShelf/`) prefix before extraction; the published archive is suitable for automatic installation by that code. This is source/layout verification, not a live install claim. Packaging is byte-reproducible and never installs, uploads, restarts LMS or changes a player. GitHub CI tests both the retained release and its fresh build; it retains the latter as a test artifact, not a release or deployment.
+The repository manifest points to the versioned `v0.2.3/dist/AlbumShelf-0.2.3.zip` archive with a SHA-1 integrity check for LMS. Add `https://raw.githubusercontent.com/vysmaty/lyrion-album-shelf/main/repo.xml` to the additional repositories in LMS plugin settings, then install or update Album Shelf. The previous `dist/AlbumShelf-0.1.0.zip` remains unchanged for compatibility verification. Version-specific tests exercise that old archive; the current regression suite exercises every new build.
 
-## Custom repository (after publication)
+For development, `?demo=1` displays clearly labeled illustrative covers with no LMS requests. `tools/preview.cjs` provides an offline fixture preview if the developer's optional `artifacts/reference/` snapshot and cover files exist; it has no connection to LMS. Those private preview files are ignored and excluded from the plugin archive.
 
-Planned additional-repository URL for **Settings → Plugins → Additional repositories**:
+## Verification and integration scope
 
-```text
-https://raw.githubusercontent.com/vysmaty/lyrion-album-shelf/main/repo.xml
-```
+85 Perl assertions execute the actual backend handlers against labeled LMS/TIDAL boundary stubs. Nine Node unit tests and eleven browser checks cover navigation, safe content, native album commands, cover-ID artwork, settings, proxy prefixes, reduced motion, pagination, physical control hierarchy, keyboard seeking and idle behavior. Five Python distribution tests cover metadata, the retained release hashes, archive reproducibility, unsafe paths and extracted-code execution. Browser screenshots use an offline fixture; they do not establish live playback or installation.
 
-The repository is currently private, so this anonymous LMS URL is **not yet usable**. It becomes usable only after the manifest is pushed to `main` and the owner explicitly publishes the repository. Do not add GitHub credentials to the LMS URL. The root [repo.xml](repo.xml) pins the actual existing `v0.1.0` release asset, with Lyrion's required **SHA1** `0ebaffb1f1bd13dfe497fc6b336f9881718c9ec0`. Its SHA256 is `fc4a62464337a39101718bf8d0baf71c904c1d34456d3230f9f580f18a27649b`. No `0.1.1` release is needed for this compatible ZIP. See [PUBLICATION.md](PUBLICATION.md) for audit scope, checks and an owner-only publication recipe.
+Read-only checks of the target server supplied real favourite-album metadata and identified the cover-ID artwork issue. Players were disconnected during final implementation. Live playback, reverse-proxy deployment and a target-server install remain unexercised.
 
-## Installation boundary
+## Integration and licenses
 
-This version is delivered as source and an archive, **not installed on the household LMS**. After publication and separate installation approval, use the custom repository on an isolated test server, enable AlbumShelf and restart as requested by LMS. For a manual install, stop the target test server, extract `AlbumShelf/` into its third-party `Plugins/` directory, start it, enable AlbumShelf, and verify the Apps link. Do not overwrite bundled/core plugins. Back up the server configuration before changing a live installation.
+The wire contract is in [INTERFACE.md](INTERFACE.md). Authentication and TIDAL account choice remain with LMS/TIDAL Local. AlbumShelf accepts no credentials. Native LMS access controls apply to playback and the server-wide public-URL setting. Use an authenticated proxy when making LMS available remotely.
 
-Use a separate LMS test instance for the first install. Do not mount household config or media, reuse household player IDs, connect real players, or run a second server with host networking. Testing a stub provider does not verify TIDAL authentication, actual account selection, TLS, service availability, or album playback.
+AlbumShelf code is MIT licensed; see [LICENSE](LICENSE). Roboto is bundled under Apache 2.0; notices and license are in `HTML/FONT-LICENSE.txt` and `HTML/FONT-APACHE-LICENSE.txt`. Material rasters carry embedded XMP provenance. Actual album artwork is fetched at runtime and remains its owners' property. No TIDAL covers are distributed in the ZIP. This project is unaffiliated with TIDAL or Lyrion.
 
-## Safety and limitations
-
-- Every album request requires one valid existing connected player ID; no arbitrary-account fallback is implemented by AlbumShelf.
-- The endpoint accepts GET only, filters malformed/non-album entries, deduplicates IDs, suppresses unsafe artwork schemes and secret-bearing provider errors, returns no-store JSON, and times out after 30 seconds.
-- No backend write/play endpoint exists. Playback is an explicit browser command to native LMS and is limited by LMS's normal access control. Anyone allowed to control LMS can control its players; do not expose LMS/JSON-RPC to the public internet. Use LMS authentication or a trusted authenticated reverse proxy.
-- Album artwork is fetched by the browser from provider-supplied HTTP(S) URLs. HTTPS LMS pages may block HTTP artwork as mixed content. No third-party image proxy, analytics, fonts or CDN is added by AlbumShelf.
-- Real favourite retrieval/playback and physical TV-remote ergonomics require a separately authorized end-to-end test. A passing unit suite does not establish those.
-
-## Verification status
-
-The Perl harness executes real AlbumShelf handlers against **explicitly labeled LMS/TIDAL boundary stubs** (63 passing assertions). Five Python tests verify metadata, pinned repository SHA1/SHA256, updater prefix layout, archive integrity/reproducibility, unsafe-path rejection and overwrite refusal. Four browser-independent Node tests pass. Both the actual downloaded release archive and a clean local rebuild pass extracted-code verification. Browser fixture evidence is in `artifacts/frontend-tests.txt`; it is not actual LMS/TIDAL integration. Docker was checked during development but its local daemon was unreachable; an isolated actual-LMS load test could not run. No household LMS was contacted or modified.
-
-## Upstream references
-
-- [TIDAL Local Plugin.pm](https://github.com/michaelherger/lms-plugin-tidal/blob/master/Plugin.pm): `getFavorites`, `_renderAlbum`, `_makeAction`, `getAPIHandler`.
-- [TIDAL Local API/Async.pm](https://github.com/michaelherger/lms-plugin-tidal/blob/master/API/Async.pm): favourite retrieval and undefined/error responses.
-- [LyrionJS Plugin.pm](https://github.com/JameZUK/LyrionJS/blob/main/plugin/LyrionJS/Plugin.pm): standalone Apps/feed and raw HTTP patterns only. No Slimproto/Bridge code is included or invoked.
-- [LMS Client.pm](https://github.com/LMS-Community/slimserver/blob/public/9.0/Slim/Player/Client.pm): `getClient` is a function, not a class method; exact player identity is checked by AlbumShelf.
-
-AlbumShelf code is MIT licensed; see [LICENSE](LICENSE). Album artwork remains the property of its respective rights holders. This project is unaffiliated with TIDAL or Lyrion.
+Upstream contracts were checked against [TIDAL Local](https://github.com/michaelherger/lms-plugin-tidal/blob/master/Plugin.pm) and [LMS](https://github.com/LMS-Community/slimserver): native `tidal_browse` album actions, status/cover handling, image proxy, request dispatch and plugin preferences. No third-party image proxy, analytics or external font service is used.

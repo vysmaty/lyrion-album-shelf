@@ -15,7 +15,10 @@ BEGIN {
     $INC{'Slim/Utils/Strings.pm'}=1;
     $INC{'Slim/Utils/Network.pm'}=1;
     $INC{'Slim/Utils/JSON.pm'}=1;
+    $INC{'Slim/Utils/Prefs.pm'}=1;
 }
+{ package Slim::Utils::Prefs; our %values; sub preferences {bless {},'TestPrefs'} }
+{ package TestPrefs; sub init {my ($self,$defaults)=@_; for my $key (keys %$defaults) {$Slim::Utils::Prefs::values{$key}=$defaults->{$key} unless exists $Slim::Utils::Prefs::values{$key}}} sub get {$Slim::Utils::Prefs::values{$_[1]}} sub set {$Slim::Utils::Prefs::values{$_[1]}=$_[2]} }
 { package Slim::Plugin::OPMLBased; our %init; sub initPlugin {shift; %init=@_} sub initCLI {} }
 { package Slim::Control::Request; our @dispatch; sub addDispatch {push @dispatch, [@_]} }
 { package Slim::Utils::JSON; sub to_json { JSON::PP->new->utf8->encode($_[0]) } }
@@ -150,7 +153,7 @@ $Slim::Player::Client::clients{alias}=$Slim::Player::Client::clients{existing};
 my ($alias)=request_albums([player=>'alias']);
 is($alias->{code},400,'LMS name/IP alias cannot substitute for exact player ID');
 is($feed->{items}[0]{type},'text','web app feed is a link to open, not a feed to fetch');
-{ package TestCLI; sub getParam {$_[0]{params}{$_[1]}} sub addResultLoop {$_[0]{$_[1]}[$_[2]]{$_[3]}=$_[4]} sub addResult {$_[0]{$_[1]}=$_[2]} sub setStatusDone {$_[0]{done}=1} }
+{ package TestCLI; sub getParam {$_[0]{params}{$_[1]}} sub addResultLoop {$_[0]{$_[1]}[$_[2]]{$_[3]}=$_[4]} sub addResult {$_[0]{$_[1]}=$_[2]} sub setStatusDone {$_[0]{done}=1} sub setStatusBadParams {$_[0]{bad}=1} }
 Plugins::AlbumShelf::Plugin->initCLI;
 ok(@Slim::Control::Request::dispatch,'controller app dispatch registered');
 my $cli=bless {params=>{_index=>0,_quantity=>1}},'TestCLI';
@@ -164,4 +167,32 @@ my $paged_ok=eval {Plugins::AlbumShelf::Plugin::_appItems($paged); 1};
 ok($paged_ok,'out-of-range page handled');
 is($paged->{count},1,'Apps pagination reports total');
 ok(!$paged->{item_loop},'no duplicate item on out-of-range page');
+my $setting = bless {params=>{_url=>'https://music.example/lms/plugins/AlbumShelf'}},'TestCLI';
+Plugins::AlbumShelf::Plugin::_publicUrl($setting);
+is($setting->{publicurl},'https://music.example/lms/plugins/AlbumShelf/','public URL normalized and persisted');
+my $query = bless {params=>{}},'TestCLI';
+Plugins::AlbumShelf::Plugin::_publicUrl($query);
+is($query->{url},$setting->{publicurl},'query returns stored proxy link');
+my $publicFeed;
+Plugins::AlbumShelf::Plugin::_appFeed(undef,sub {$publicFeed=shift});
+is($publicFeed->{items}[0]{weblink},$query->{url},'Apps feed uses public URL');
+my $publicItems=bless {params=>{}},'TestCLI';
+Plugins::AlbumShelf::Plugin::_appItems($publicItems);
+is($publicItems->{item_loop}[0]{weblink},$query->{url},'controller Apps link uses public URL');
+for my $invalid ('javascript:alert(1)','https://user:secret@music.example','https://music.example/?token=x','https://music.example/#x','https://music.example/other',"https://music.example/\n",'https://music.example:99999') {
+    my $badUrl=bless {params=>{_url=>$invalid}},'TestCLI';
+    Plugins::AlbumShelf::Plugin::_publicUrl($badUrl);
+    ok($badUrl->{bad},'reject unsafe or invalid public URL');
+    is($Slim::Utils::Prefs::values{publicUrl},$query->{url},'invalid input preserves last setting');
+}
+my $originOnly=bless {params=>{_url=>'https://music.example'}},'TestCLI';
+Plugins::AlbumShelf::Plugin::_publicUrl($originOnly);
+is($originOnly->{url},'https://music.example/plugins/AlbumShelf/','proxy origin expands to standalone path');
+my $resetUrl=bless {params=>{_url=>''}},'TestCLI';
+Plugins::AlbumShelf::Plugin::_publicUrl($resetUrl);
+is($resetUrl->{url},'http://localhost:9000/plugins/AlbumShelf/','empty setting restores default server URL');
+my $redirect=TestResponse->new([],'GET','/plugins/AlbumShelf');
+Plugins::AlbumShelf::Plugin::_page('socket',$redirect);
+is($redirect->{code},302,'missing trailing slash redirects');
+is($redirect->{headers}{Location},'AlbumShelf/','relative redirect preserves reverse-proxy prefix');
 done_testing;

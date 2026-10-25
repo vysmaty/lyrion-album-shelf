@@ -4,3 +4,7 @@ node_modules/
 .DS_Store
 /artifacts/publication-audit/
 /artifacts/build/
+/artifacts/reference/
+/artifacts/preview/
+/artifacts/samples/
+/.impeccable/
